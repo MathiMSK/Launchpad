@@ -22,6 +22,7 @@ import Register from "views/examples/Register.js";
 import Login from "views/Login/Login.js";
 import Tables from "views/examples/Tables.js";
 import Icons from "views/examples/Icons.js";
+import Admin from "views/examples/Admin";
 
 var routes = [
   {
@@ -49,7 +50,7 @@ var routes = [
     path: "/user-profile",
     name: "Admin",
     icon: "ni ni-single-02 ",
-    component: <Profile />,
+    component: <Admin />,
     layout: "/admin",
   },
   // {
