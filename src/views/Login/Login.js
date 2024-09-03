@@ -43,7 +43,7 @@ const Login = () => {
   const navigate = useNavigate()
   const handleClick = () => {
     signInWithPopup(auth, provider).then((data) => {
-      logEmail(data.user.email);
+      setLogEmail(data.user.email);
       setLogValue(data);
       localStorage.setItem("email:", data.user.email);
     });
@@ -51,7 +51,7 @@ const Login = () => {
 
   useEffect(() => {
     setLogEmail(localStorage.getItem("email"));
-  });
+  },[]);
 
   if(logValue && logEmail){
     return navigate("/admin/index")
