@@ -15,7 +15,7 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // react component that copies the given text inside your clipboard
 import { CopyToClipboard } from "react-copy-to-clipboard";
 // reactstrap components
@@ -30,9 +30,26 @@ import {
 } from "reactstrap";
 // core components
 import Header from "components/Headers/Header.js";
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "views/Login/config/config";
 
 const Icons = () => {
   const [copiedText, setCopiedText] = useState();
+  const [data, setData] = useState([]);
+  
+  useEffect(() => {
+    // Reference to your Firestore collection
+    const unsubscribe = onSnapshot(collection(db, "subscription_plan"), (querySnapshot) => {
+      const documents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setData(documents);
+    });
+    return () => unsubscribe();
+  }, []);
+  console.log(data,"minion1");
+
   return (
     <>
       <Header />

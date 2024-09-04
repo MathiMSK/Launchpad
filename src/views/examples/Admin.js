@@ -15,7 +15,7 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // react component that copies the given text inside your clipboard
 import { CopyToClipboard } from "react-copy-to-clipboard";
 // reactstrap components
@@ -30,92 +30,23 @@ import {
 } from "reactstrap";
 // core components
 import Header from "components/Headers/Header.js";
-import { MDBDatatable } from 'mdb-react-ui-kit';
+import { MDBDatatable } from "mdb-react-ui-kit";
 import MUIDataTable from "mui-datatables";
-import { useTheme } from "@mui/material";
-import { useMediaQuery } from "@mui/material";
 
 const Admin = () => {
   const [copiedText, setCopiedText] = useState();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); 
   
-// const columns = ["Name", "Company", "City", "State"];
-const columns = [
-  {
-    name: "SlNo",
-    label: "Sl No",
-    options: {
-      filter: false,
-      sort: false,
-    },
-  },
-  {
-    name: "Name",
-    label: "Name",
-    options: {
-      setCellProps: () => ({
-        style: {
-          whiteSpace: "nowrap", // Prevent text wrapping
-          overflow: "hidden", // Hide overflow
-          textOverflow: "ellipsis", // Add ellipsis to indicate overflow
-        },
-      }),
-    },
-  },
-  {
-    name: "Company",
-    label: "Company",
-    options: {
-      setCellProps: () => ({
-        style: {
-          whiteSpace: "nowrap", // Prevent text wrapping
-          overflow: "hidden", // Hide overflow
-          textOverflow: "ellipsis", // Add ellipsis to indicate overflow
-        },
-      }),
-    },
-  },
-  {
-    name: "City",
-    label: "City",
-    options: {
-      setCellProps: () => ({
-        style: {
-          whiteSpace: "nowrap", // Prevent text wrapping
-          overflow: "hidden", // Hide overflow
-          textOverflow: "ellipsis", // Add ellipsis to indicate overflow
-        },
-      }),
-    },
-  },
-  {
-    name: "State",
-    label: "State",
-    options: {
-      setCellProps: () => ({
-        style: {
-          whiteSpace: "nowrap", // Prevent text wrapping
-          overflow: "hidden", // Hide overflow
-          textOverflow: "ellipsis", // Add ellipsis to indicate overflow
-        },
-      }),
-    },
-  },
-  // Add more columns as needed
-];
+const columns = ["Name", "Company", "City", "State"];
 
 const data = [
   ["Joe James", "Test Corp", "Yonkers", "NY"],
   ["John Walsh", "Test Corp", "Hartford", "CT"],
   ["Bob Herm", "Test Corp", "Tampa", "FL"],
 ];
-const dataWithSlNo = data.map((row, index) => [index + 1, ...row]);
 
 const options = {
   filterType: 'checkbox',
-  selectableRows: "none", 
-    rowsPerPageOptions: [5, 10, 15],
+  selectableRows: "none",
 };
 
   return (
@@ -130,7 +61,7 @@ const options = {
       </div>
       <MUIDataTable
     title={"Employee List"}
-    data={dataWithSlNo}
+    data={data}
     columns={columns}
     options={options}
   />
