@@ -38,7 +38,7 @@ const Admin = () => {
   const [copiedText, setCopiedText] = useState();
   const [data, setData] = useState([]);
   const columns = ["username", "email", "mobile", "State"];
-  console.log(data,"minion");
+  console.log(data,"user");
   
   // const data = [
   //   ["Joe James", "Test Corp", "Yonkers", "NY"],

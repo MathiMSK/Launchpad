@@ -48,7 +48,7 @@ const Icons = () => {
     });
     return () => unsubscribe();
   }, []);
-  console.log(data,"minion1");
+  console.log(data,"datasub");
 
   return (
     <>
