@@ -22,9 +22,12 @@ import { Card, CardBody, CardTitle, Container, Row, Col } from "reactstrap";
 const Header = () => {
   return (
     <>
-      <div className="header bg-gradient-info pb-8 pt-5 pt-md-8">
+      <div className="header bg-black pb-8 pt-5 pt-md-8">
         <Container fluid>
           <div className="header-body">
+          <br/>
+          <br/>
+          <br/>
             {/* Card stats */}
             {/* <Row>
               <Col lg="6" xl="3">
