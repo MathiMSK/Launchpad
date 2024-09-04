@@ -35,7 +35,7 @@ var routes = [
   {
     path: "/icons",
     name: "Subscription",
-    icon: "ni ni-planet text-blue",
+    icon: "ni ni-planet ",
     component: <Icons />,
     layout: "/admin",
   },
