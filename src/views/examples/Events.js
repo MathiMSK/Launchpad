@@ -15,14 +15,18 @@ import { db } from "views/Login/config/config";
 import { Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import { Add, Delete, Edit } from "@mui/icons-material";
 
-const Subscription = () => {
+const Events = () => {
   const [data, setData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({
-    name: "",
-    price: "",
-    validity_in_months: "",
+    title: "",
+    event_type: "",
+    date: "",
+    location: "",
+    description: "",
+    approved_by_admin: "",
+    status: "",
   });
 
   // Columns for the MUI DataTable
@@ -36,16 +40,28 @@ const Subscription = () => {
       },
     },
     {
-      name: "name",
-      label: "Plan Name",
+      name: "title",
+      label: "Name",
     },
     {
-      name: "price",
-      label: "Price",
+      name: "event_type",
+      label: "Event Type",
     },
     {
-      name: "validity_in_months",
-      label: "Validity (in months)",
+      name: "date",
+      label: "Date",
+    },
+    {
+      name: "location",
+      label: "Location",
+    },
+    {
+      name: "description",
+      label: "Description",
+    },
+    {
+      name: "status",
+      label: "Status",
     },
     {
       name: "action",
@@ -73,7 +89,7 @@ const Subscription = () => {
 
   // Fetch data from Firestore
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "subscription_plan"), (querySnapshot) => {
+    const unsubscribe = onSnapshot(collection(db, "events"), (querySnapshot) => {
       const documents = querySnapshot.docs.map((doc, index) => ({
         id: doc.id,
         SlNo: index + 1,
@@ -83,16 +99,18 @@ const Subscription = () => {
     });
     return () => unsubscribe();
   }, []);
-  console.log();
-  
 
   // Handle Add User
   const handleAddUser = async () => {
     try {
-      await addDoc(collection(db, "subscription_plan"), formData);
-      setFormData({   name: "",
-        price: "",
-        validity_in_months: "" });
+      await addDoc(collection(db, "events"), formData);
+      setFormData({ title: "",
+        event_type: "",
+        date: "",
+        location: "",
+        description: "",
+        approved_by_admin: "",
+        status: "" });
       setDialogOpen(false);
     } catch (error) {
       console.error("Error adding document: ", error);
@@ -102,11 +120,15 @@ const Subscription = () => {
   // Handle Update User
   const handleUpdateUser = async () => {
     try {
-      const userRef = doc(db, "subscription_plan", editId);
+      const userRef = doc(db, "events", editId);
       await updateDoc(userRef, formData);
-      setFormData({   name: "",
-        price: "",
-        validity_in_months: "" });
+      setFormData({ title: "",
+        event_type: "",
+        date: "",
+        location: "",
+        description: "",
+        approved_by_admin: "",
+        status: ""  });
       setDialogOpen(false);
       setEditId(null);
     } catch (error) {
@@ -118,7 +140,7 @@ const Subscription = () => {
   const handleDelete = async (rowIndex) => {
     try {
       const userToDelete = data[rowIndex];
-      await deleteDoc(doc(db, "subscription_plan", userToDelete.id));
+      await deleteDoc(doc(db, "events", userToDelete.id));
     } catch (error) {
       console.error("Error deleting document: ", error);
     }
@@ -128,9 +150,12 @@ const Subscription = () => {
   const handleEdit = (rowIndex) => {
     const userToEdit = data[rowIndex];
     setFormData({
-      name: userToEdit.name,
-      price: userToEdit.price,
-      validity_in_months: userToEdit.validity_in_months,
+      title: userToEdit.title,
+      event_type: userToEdit.event_type,
+      date: userToEdit.date,
+      location: userToEdit.location,
+      description: userToEdit.description,
+      status: userToEdit.status,
     });
     setEditId(userToEdit.id);
     setDialogOpen(true);
@@ -172,7 +197,7 @@ const Subscription = () => {
         <br />
         <br />
         <MUIDataTable
-          title={"Subscription List"}
+          title={"Events List"}
           data={data}
           columns={columns}
           options={options}
@@ -181,28 +206,28 @@ const Subscription = () => {
 
       {/* Dialog for Add/Edit User */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-        <DialogTitle>{editId ? "Edit Subscription Plan" : "Add Subscription Plan"}</DialogTitle>
+        <DialogTitle>{editId ? "Edit User" : "Add User"}</DialogTitle>
         <form onSubmit={handleSubmit}>
           <DialogContent>
             <TextField
-              label="Plan Name"
-              value={formData.name}
+              label="Name"
+              value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
               fullWidth
               margin="dense"
               required
             />
             <TextField
-              label="Price"
-              value={formData.price}
+              label="Email"
+              value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               fullWidth
               margin="dense"
               required
             />
             <TextField
-              label="Validity ( in months )"
-              value={formData.validity_in_months}
+              label="Mobile"
+              value={formData.mobile}
               onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
               fullWidth
               margin="dense"
@@ -223,4 +248,4 @@ const Subscription = () => {
   );
 };
 
-export default Subscription;
+export default Events;

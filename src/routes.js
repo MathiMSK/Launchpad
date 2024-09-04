@@ -24,6 +24,7 @@ import Tables from "views/examples/Tables.js";
 import Icons from "views/examples/Icons.js";
 import Admin from "views/examples/Admin";
 import Subscription from "views/examples/Subscription";
+import Events from "views/examples/Events";
 
 var routes = [
   {
@@ -31,13 +32,6 @@ var routes = [
     name: "Dashboard",
     icon: "ni ni-tv-2 text-primary",
     component: <Index />,
-    layout: "/admin",
-  },
-  {
-    path: "/icons",
-    name: "Subscription",
-    icon: "ni ni-planet ",
-    component: <Subscription />,
     layout: "/admin",
   },
   // {
@@ -54,13 +48,20 @@ var routes = [
     component: <Admin />,
     layout: "/admin",
   },
-  // {
-  //   path: "/tables",
-  //   name: "Tables",
-  //   icon: "ni ni-bullet-list-67 text-red",
-  //   component: <Tables />,
-  //   layout: "/admin",
-  // },
+  {
+    path: "/icons",
+    name: "Subscription",
+    icon: "ni ni-planet ",
+    component: <Subscription />,
+    layout: "/admin",
+  },
+  {
+    path: "/events",
+    name: "Events",
+    icon: "fa fa-calendar text-secondary",
+    component: <Events />,
+    layout: "/admin",
+  },
   {
     path: "/login",
     name: "Login",
