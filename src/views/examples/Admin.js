@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { CopyToClipboard } from "react-copy-to-clipboard";
 import {
   Card,
   CardHeader,
@@ -11,14 +10,22 @@ import {
 } from "reactstrap";
 import Header from "components/Headers/Header.js";
 import MUIDataTable from "mui-datatables";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "views/Login/config/config";
-import { Box, Button } from "@mui/material";
+import { Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import { Add, Delete, Edit } from "@mui/icons-material";
 
 const Admin = () => {
   const [data, setData] = useState([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    mobile: "",
+  });
 
+  // Columns for the MUI DataTable
   const columns = [
     {
       name: "SlNo",
@@ -26,36 +33,15 @@ const Admin = () => {
       options: {
         filter: false,
         sort: false,
-        setCellProps: () => ({
-          style: { minWidth: "50px" }, // Ensures enough width for serial number
-        }),
       },
     },
     {
       name: "username",
       label: "Name",
-      options: {
-        setCellProps: () => ({
-          style: {
-            minWidth: "150px", // Set minimum width for better responsiveness
-            wordWrap: "break-word", // Enable word wrap to prevent overflow
-            whiteSpace: "normal", // Ensure the text wraps instead of overlapping
-          },
-        }),
-      },
     },
     {
       name: "email",
       label: "Email",
-      options: {
-        setCellProps: () => ({
-          style: {
-            minWidth: "200px", // Set minimum width for better responsiveness
-            wordWrap: "break-word", // Enable word wrap to prevent overflow
-            whiteSpace: "normal", // Ensure the text wraps instead of overlapping
-          },
-        }),
-      },
     },
     {
       name: "action",
@@ -63,14 +49,17 @@ const Admin = () => {
       options: {
         filter: false,
         sort: false,
-        setCellProps: () => ({
-          style: { minWidth: "100px" }, // Ensure enough width for the action buttons
-        }),
-        customBodyRender: (value, tableMeta, updateValue) => {
+        customBodyRender: (value, tableMeta) => {
           return (
             <>
-              <Edit style={{ cursor: "pointer", marginRight: "10px" }} onClick={() => handleEdit(tableMeta.rowIndex)} />
-              <Delete style={{ cursor: "pointer" }} onClick={() => handleDelete(tableMeta.rowIndex)} />
+              <Edit
+                style={{ cursor: "pointer", marginRight: "10px" }}
+                onClick={() => handleEdit(tableMeta.rowIndex)}
+              />
+              <Delete
+                style={{ cursor: "pointer" }}
+                onClick={() => handleDelete(tableMeta.rowIndex)}
+              />
             </>
           );
         },
@@ -78,25 +67,12 @@ const Admin = () => {
     },
   ];
 
-  const handleEdit = (rowIndex) => {
-    console.log("Edit action clicked on row: ", rowIndex);
-    // Add your edit logic here
-  };
-
-  const handleDelete = (rowIndex) => {
-    console.log("Delete action clicked on row: ", rowIndex);
-    // Add your delete logic here
-  };
-
-  const dataWithSlNo = data.map((row, index) => ({
-    SlNo: index + 1,
-    ...row,
-  }));
-
+  // Fetch data from Firestore
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "users"), (querySnapshot) => {
-      const documents = querySnapshot.docs.map((doc) => ({
+      const documents = querySnapshot.docs.map((doc, index) => ({
         id: doc.id,
+        SlNo: index + 1,
         ...doc.data(),
       }));
       setData(documents);
@@ -104,12 +80,69 @@ const Admin = () => {
     return () => unsubscribe();
   }, []);
 
+  // Handle Add User
+  const handleAddUser = async () => {
+    try {
+      await addDoc(collection(db, "users"), formData);
+      setFormData({ username: "", email: "", mobile: "" });
+      setDialogOpen(false);
+    } catch (error) {
+      console.error("Error adding document: ", error);
+    }
+  };
+
+  // Handle Update User
+  const handleUpdateUser = async () => {
+    try {
+      const userRef = doc(db, "users", editId);
+      await updateDoc(userRef, formData);
+      setFormData({ username: "", email: "", mobile: "" });
+      setDialogOpen(false);
+      setEditId(null);
+    } catch (error) {
+      console.error("Error updating document: ", error);
+    }
+  };
+
+  // Handle Delete User
+  const handleDelete = async (rowIndex) => {
+    try {
+      const userToDelete = data[rowIndex];
+      await deleteDoc(doc(db, "users", userToDelete.id));
+    } catch (error) {
+      console.error("Error deleting document: ", error);
+    }
+  };
+
+  // Handle Edit Button Click
+  const handleEdit = (rowIndex) => {
+    const userToEdit = data[rowIndex];
+    setFormData({
+      username: userToEdit.username,
+      email: userToEdit.email,
+      mobile: userToEdit.mobile,
+    });
+    setEditId(userToEdit.id);
+    setDialogOpen(true);
+  };
+
+  // Handle Form Submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (editId) {
+      handleUpdateUser();
+    } else {
+      handleAddUser();
+    }
+  };
+
+  // Options for MUI DataTable
   const options = {
     filterType: "checkbox",
     selectableRows: "none",
-    responsive: "simple", // Use 'simple' for better mobile responsiveness
-    rowsPerPage: 5, // Set the default number of rows per page
-    rowsPerPageOptions: [5, 10, 15],
+    responsive: "simple",
+    rowsPerPage: 10,
+    rowsPerPageOptions: [10, 20, 30],
   };
 
   return (
@@ -121,6 +154,7 @@ const Admin = () => {
             startIcon={<Add />}
             variant="contained"
             sx={{ color: "black", backgroundColor: "white", float: "right" }}
+            onClick={() => setDialogOpen(true)}
           >
             Add
           </Button>
@@ -129,11 +163,52 @@ const Admin = () => {
         <br />
         <MUIDataTable
           title={"Admin List"}
-          data={dataWithSlNo}
+          data={data}
           columns={columns}
           options={options}
         />
       </Container>
+
+      {/* Dialog for Add/Edit User */}
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+        <DialogTitle>{editId ? "Edit User" : "Add User"}</DialogTitle>
+        <form onSubmit={handleSubmit}>
+          <DialogContent>
+            <TextField
+              label="Name"
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              fullWidth
+              margin="dense"
+              required
+            />
+            <TextField
+              label="Email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              fullWidth
+              margin="dense"
+              required
+            />
+            <TextField
+              label="Mobile"
+              value={formData.mobile}
+              onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+              fullWidth
+              margin="dense"
+              required
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDialogOpen(false)} color="primary">
+              Cancel
+            </Button>
+            <Button type="submit" color="primary" variant="contained">
+              {editId ? "Update" : "Add"}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
     </>
   );
 };
