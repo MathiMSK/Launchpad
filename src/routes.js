@@ -23,6 +23,7 @@ import Login from "views/Login/Login.js";
 import Tables from "views/examples/Tables.js";
 import Icons from "views/examples/Icons.js";
 import Admin from "views/examples/Admin";
+import Subscription from "views/examples/Subscription";
 
 var routes = [
   {
@@ -36,7 +37,7 @@ var routes = [
     path: "/icons",
     name: "Subscription",
     icon: "ni ni-planet ",
-    component: <Icons />,
+    component: <Subscription />,
     layout: "/admin",
   },
   // {
