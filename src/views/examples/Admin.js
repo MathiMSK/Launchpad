@@ -15,7 +15,7 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // react component that copies the given text inside your clipboard
 import { CopyToClipboard } from "react-copy-to-clipboard";
 // reactstrap components
@@ -30,41 +30,56 @@ import {
 } from "reactstrap";
 // core components
 import Header from "components/Headers/Header.js";
-import { MDBDatatable } from 'mdb-react-ui-kit';
+import { MDBDatatable } from "mdb-react-ui-kit";
 import MUIDataTable from "mui-datatables";
-
+import { collection, onSnapshot } from "firebase/firestore";
+import { db } from "views/Login/config/config";
 const Admin = () => {
   const [copiedText, setCopiedText] = useState();
+  const [data, setData] = useState([]);
+  const columns = ["username", "email", "mobile", "State"];
+  console.log(data,"minion");
   
-const columns = ["Name", "Company", "City", "State"];
+  // const data = [
+  //   ["Joe James", "Test Corp", "Yonkers", "NY"],
+  //   ["John Walsh", "Test Corp", "Hartford", "CT"],
+  //   ["Bob Herm", "Test Corp", "Tampa", "FL"],
+  // ];
 
-const data = [
-  ["Joe James", "Test Corp", "Yonkers", "NY"],
-  ["John Walsh", "Test Corp", "Hartford", "CT"],
-  ["Bob Herm", "Test Corp", "Tampa", "FL"],
-];
+  useEffect(() => {
+    // Reference to your Firestore collection
+    const unsubscribe = onSnapshot(collection(db, "users"), (querySnapshot) => {
+      const documents = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setData(documents);
+    });
 
-const options = {
-  filterType: 'checkbox',
-  selectableRows: "none",
-};
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+
+  const options = {
+    filterType: "checkbox",
+    selectableRows: "none",
+  };
 
   return (
     <>
       <Header />
       {/* Page content */}
       <Container className="mt--7" fluid>
-      <br/>
-      <br/>
-      <div>
-        {/* <Button>Add</Button> */}
-      </div>
-      <MUIDataTable
-    title={"Employee List"}
-    data={data}
-    columns={columns}
-    options={options}
-  />
+        <br />
+        <br />
+        <div>{/* <Button>Add</Button> */}</div>
+        <MUIDataTable
+          title={"Employee List"}
+          data={data}
+          columns={columns}
+          options={options}
+        />
         {/* Table */}
         {/* <Row>
           <div className="col">
