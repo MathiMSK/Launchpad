@@ -12,8 +12,9 @@ import Header from "components/Headers/Header.js";
 import MUIDataTable from "mui-datatables";
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "views/Login/config/config";
-import { Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+import { Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 import { Add, Delete, Edit } from "@mui/icons-material";
+import { Grid } from "@mui/material";
 
 const Admin = () => {
   const [data, setData] = useState([]);
@@ -84,7 +85,8 @@ const Admin = () => {
   const handleAddUser = async () => {
     try {
       await addDoc(collection(db, "users"), formData);
-      setFormData({ username: "", email: "", mobile: "" });
+      setEditId(null); 
+      setFormData({ email: "" });
       setDialogOpen(false);
     } catch (error) {
       console.error("Error adding document: ", error);
@@ -96,7 +98,7 @@ const Admin = () => {
     try {
       const userRef = doc(db, "users", editId);
       await updateDoc(userRef, formData);
-      setFormData({ username: "", email: "", mobile: "" });
+      setFormData({  email: "" });
       setDialogOpen(false);
       setEditId(null);
     } catch (error) {
@@ -118,9 +120,9 @@ const Admin = () => {
   const handleEdit = (rowIndex) => {
     const userToEdit = data[rowIndex];
     setFormData({
-      username: userToEdit.username,
+      // username: userToEdit.username,
       email: userToEdit.email,
-      mobile: userToEdit.mobile,
+      // mobile: userToEdit.mobile,
     });
     setEditId(userToEdit.id);
     setDialogOpen(true);
@@ -170,45 +172,60 @@ const Admin = () => {
       </Container>
 
       {/* Dialog for Add/Edit User */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-        <DialogTitle>{editId ? "Edit User" : "Add User"}</DialogTitle>
-        <form onSubmit={handleSubmit}>
-          <DialogContent>
-            <TextField
-              label="Name"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              fullWidth
-              margin="dense"
-              required
-            />
-            <TextField
-              label="Email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              fullWidth
-              margin="dense"
-              required
-            />
-            <TextField
-              label="Mobile"
-              value={formData.mobile}
-              onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-              fullWidth
-              margin="dense"
-              required
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDialogOpen(false)} color="primary">
-              Cancel
-            </Button>
-            <Button type="submit" color="primary" variant="contained">
-              {editId ? "Update" : "Add"}
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
+      <Dialog
+  open={dialogOpen}
+  // onClose={() => setDialogOpen(false)}
+  onClose={() => {
+    setDialogOpen(false);
+    setEditId(null); 
+    setFormData({ email: "" }); // Clear form data when dialog is closed
+  }}
+  fullWidth
+  maxWidth="sm"
+  sx={{ padding: "20px" }}
+>
+  <DialogTitle>
+    <Typography variant="h6" component="div">
+      {editId ? "Edit User" : "Add User"}
+    </Typography>
+  </DialogTitle>
+  <form onSubmit={handleSubmit}>
+    <DialogContent dividers>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <TextField
+            label="Email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            fullWidth
+            margin="dense"
+            required
+            variant="outlined"
+          />
+        </Grid>
+        {/* Add more form fields here if needed */}
+      </Grid>
+    </DialogContent>
+    <DialogActions sx={{ padding: "16px 24px" }}>
+      <Button
+        onClick={() => setDialogOpen(false)}
+        color="secondary"
+        variant="outlined"
+        sx={{ marginRight: "8px" }}
+      >
+        Cancel
+      </Button>
+      <Button
+        type="submit"
+        color="primary"
+        variant="contained"
+      >
+        {editId ? "Update" : "Add"}
+      </Button>
+    </DialogActions>
+  </form>
+</Dialog>
+
     </>
   );
 };

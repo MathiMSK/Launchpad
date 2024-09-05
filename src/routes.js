@@ -25,6 +25,7 @@ import Icons from "views/examples/Icons.js";
 import Admin from "views/examples/Admin";
 import Subscription from "views/examples/Subscription";
 import Events from "views/examples/Events";
+import Jobs from "views/examples/Jobs";
 
 var routes = [
   {
@@ -58,8 +59,15 @@ var routes = [
   {
     path: "/events",
     name: "Events",
-    icon: "fa fa-calendar text-secondary",
+    icon: "fa fa-calendar ",
     component: <Events />,
+    layout: "/admin",
+  },
+  {
+    path: "/jobs",
+    name: "Jobs",
+    icon: "ni ni-briefcase-24 ",
+    component: <Jobs />,
     layout: "/admin",
   },
   {
