@@ -15,7 +15,7 @@ import { db } from "views/Login/config/config";
 import { Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 import { Add, Delete, Edit } from "@mui/icons-material";
 import { Grid } from "@mui/material";
-
+import './styles.css';
 const Admin = () => {
   const [data, setData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);

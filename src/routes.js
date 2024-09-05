@@ -43,14 +43,14 @@ var routes = [
   //   layout: "/admin",
   // },
   {
-    path: "/user-profile",
+    path: "/adminlists",
     name: "Admin",
     icon: "ni ni-single-02 ",
     component: <Admin />,
     layout: "/admin",
   },
   {
-    path: "/icons",
+    path: "/subscription",
     name: "Subscription",
     icon: "ni ni-planet ",
     component: <Subscription />,

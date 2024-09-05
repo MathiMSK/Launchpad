@@ -39,11 +39,15 @@ const AdminNavbar = (props) => {
   const handleLogOut = async() =>{
     try {
       await auth.signOut();
-      window.location.href = "/auth/login"
+      localStorage.removeItem("email");
+      localStorage.removeItem("authToken");
+      window.location.href = "/auth/login";
     } catch (error) {
       console.log(error);
     }
   }
+
+  
   return (
     <>
       <Navbar className="navbar-top navbar-info" expand="md" id="navbar-main">

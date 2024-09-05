@@ -40,67 +40,86 @@ import { useNavigate } from "react-router-dom";
 const Login = () => {
   const [logEmail, setLogEmail] = useState();
   const [logValue, setLogValue] = useState();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
+  // XOR encryption function
+  const xorEncrypt = (token, key) => {
+    let result = "";
+    for (let i = 0; i < token.length; i++) {
+      result += String.fromCharCode(
+        token.charCodeAt(i) ^ key.charCodeAt(i % key.length)
+      );
+    }
+    return btoa(result); // Encode the result as Base64 to store it
+  };
+
+  // Save the encrypted token to localStorage
+  const saveTokenToLocalStorage = (token) => {
+    const secretKey = "launchpadkey"; // Use a consistent key
+    const encryptedToken = xorEncrypt(token, secretKey);
+    localStorage.setItem("authToken", encryptedToken);
+  };
+
   const handleClick = () => {
-    signInWithPopup(auth, provider).then((data) => {
-      setLogEmail(data.user.email);
-      setLogValue(data);
-      localStorage.setItem("email:", data.user.email);
-    });
-  };  
-
-  useEffect(() => {
-    setLogEmail(localStorage.getItem("email"));
-  },[]);
-
-  if(logValue && logEmail){
-    return navigate("/admin/index")
-  }
+    console.log("Login button clicked");
+    
+    signInWithPopup(auth, provider)
+      .then((data) => {
+        setLogEmail(data.user.email);
+        localStorage.setItem("email", data.user.email);
+        saveTokenToLocalStorage(data.user.accessToken);
+        navigate("/admin/index");
+        window.location.reload()
+      })
+      .catch((error) => {
+        console.error("Login failed:", error);
+      });
+  };
 
   return (
     <>
-        <div className="d-flex justify-content-center align-items-center loginCont">
-          <Col lg="4" md="6" sm="8" xs="12">
-            <Card className="bg-secondary shadow border-0">
-              <CardHeader className="bg-transparent">
-                <div className="header-body text-center">
-                  <Row className="justify-content-center">
-                    <Col>
-                      <h1 className="text">Welcome!</h1>
-                      <p className="text-lead text">
-                        Lorem Ipsum is simply dummy text of the printing and
-                        typesetting industry. Lorem Ipsum has been the
-                        industry's standard dummy text ever since the 1500s,
-                        when an unknown printer took a galley of type and
-                        scrambled it to make a type specimen book.
-                      </p>
-                    </Col>
-                  </Row>
-                </div>
-              </CardHeader>
-              <CardBody className="px-lg-5 py-lg-5">
-                <div className="text-muted text-center mt-2 mb-3">
-                  <small>Sign in with</small>
-                </div>
-                <div className="btn-wrapper text-center">
-                  <Button
-                    className="btn-neutral btn-icon"
-                    color="default"
-                    onClick={handleClick}
-                  >
-                    <span className="btn-inner--icon">
-                      <img
-                        alt="Google"
-                        src={
-                          require("../../assets/img/icons/common/google.svg")
-                            .default
-                        }
-                      />
-                    </span>
-                    <span className="btn-inner--text">Google</span>
-                  </Button>
-                </div>
-                {/* <div className="text-center text-muted mb-4">
+      <div className="d-flex justify-content-center align-items-center loginCont">
+        <Col lg="4" md="6" sm="8" xs="12">
+          <Card className="bg-secondary shadow border-0">
+            <CardHeader className="bg-transparent">
+              <div className="header-body text-center">
+                <Row className="justify-content-center">
+                  <Col>
+                    <h1 className="text">Welcome!</h1>
+                    <p className="text-lead text">
+                      Lorem Ipsum is simply dummy text of the printing and
+                      typesetting industry. Lorem Ipsum has been the industry's
+                      standard dummy text ever since the 1500s, when an unknown
+                      printer took a galley of type and scrambled it to make a
+                      type specimen book.
+                    </p>
+                  </Col>
+                </Row>
+              </div>
+            </CardHeader>
+            <CardBody className="px-lg-5 py-lg-5">
+              <div className="text-muted text-center mt-2 mb-3">
+                <small>Sign in with</small>
+              </div>
+              <div className="btn-wrapper text-center">
+                <Button
+                  className="btn-neutral btn-icon"
+                  color="default"
+                  onClick={handleClick}
+                >
+                  <span className="btn-inner--icon">
+                    <img
+                      alt="Google"
+                      src={
+                        require("../../assets/img/icons/common/google.svg")
+                          .default
+                      }
+                    />
+                  </span>
+                  <span className="btn-inner--text">Google</span>
+                </Button>
+              </div>
+              {/* <div className="text-center text-muted mb-4">
               <small>Or sign in with credentials</small>
             </div>
             <Form role="form">
@@ -153,10 +172,10 @@ const Login = () => {
                 </Button>
               </div>
             </Form> */}
-              </CardBody>
-            </Card>
-            {/* Uncomment and modify as needed for additional links */}
-            {/* <Row className="mt-3">
+            </CardBody>
+          </Card>
+          {/* Uncomment and modify as needed for additional links */}
+          {/* <Row className="mt-3">
           <Col xs="6">
             <a
               className="text-light"
@@ -176,8 +195,8 @@ const Login = () => {
             </a>
           </Col>
         </Row> */}
-          </Col>
-        </div>
+        </Col>
+      </div>
     </>
   );
 };
