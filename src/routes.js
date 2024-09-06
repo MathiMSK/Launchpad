@@ -26,6 +26,8 @@ import Admin from "views/examples/Admin";
 import Subscription from "views/examples/Subscription";
 import Events from "views/examples/Events";
 import Jobs from "views/examples/Jobs";
+import CarrerAssesment from "views/examples/CarrerAssesment";
+import AiFeatures from "views/examples/AiFeatures";
 
 var routes = [
   {
@@ -68,6 +70,20 @@ var routes = [
     name: "Jobs",
     icon: "ni ni-briefcase-24 ",
     component: <Jobs />,
+    layout: "/admin",
+  },
+  {
+    path: "/carrerassesments",
+    name: "Carrer Assesments",
+    icon: "ni ni-badge",
+    component: <CarrerAssesment />,
+    layout: "/admin",
+  },
+  {
+    path: "/aifeatures",
+    name: "Ai Features",
+    icon: "ni ni-atom ",
+    component: <AiFeatures />,
     layout: "/admin",
   },
   {

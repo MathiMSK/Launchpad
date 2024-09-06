@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  Card,
-  CardHeader,
-  CardBody,
   Container,
-  Row,
-  Col,
-  UncontrolledTooltip,
 } from "reactstrap";
 import Header from "components/Headers/Header.js";
 import MUIDataTable from "mui-datatables";
