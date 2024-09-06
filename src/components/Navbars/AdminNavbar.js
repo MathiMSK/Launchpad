@@ -46,7 +46,7 @@ const AdminNavbar = (props) => {
       console.log(error);
     }
   }
-
+console.log(localStorage.getItem("displayName"),"props")
   
   return (
     <>
@@ -77,12 +77,12 @@ const AdminNavbar = (props) => {
                   <span className="avatar avatar-sm rounded-circle">
                     <img
                       alt="..."
-                      src={require("../../assets/img/theme/team-4-800x800.jpg")}
+                      src={localStorage.getItem("photoUrl")}
                     />
                   </span>
                   <Media className="ml-2 d-none d-lg-block">
                     <span className="mb-0 text-sm font-weight-bold">
-                      Jessica Jones
+                      {localStorage.getItem("displayName")}
                     </span>
                   </Media>
                 </Media>

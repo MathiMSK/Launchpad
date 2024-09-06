@@ -34,14 +34,9 @@ import {
 import "./login.css";
 import { auth, provider } from "./config/config";
 import { signInWithPopup } from "firebase/auth";
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 const Login = () => {
-  const [logEmail, setLogEmail] = useState();
-  const [logValue, setLogValue] = useState();
   const navigate = useNavigate();
-
   // XOR encryption function
   const xorEncrypt = (token, key) => {
     let result = "";
@@ -65,8 +60,10 @@ const Login = () => {
     
     signInWithPopup(auth, provider)
       .then((data) => {
-        setLogEmail(data.user.email);
+        console.log(data,"data")
         localStorage.setItem("email", data.user.email);
+        localStorage.setItem("displayName", data.user.displayName);
+        localStorage.setItem("photoUrl", data.user.photoURL);
         saveTokenToLocalStorage(data.user.accessToken);
         navigate("/admin/index");
         window.location.reload()

@@ -67,10 +67,11 @@ const Events = () => {
       label: "Status",
       options:{
         customBodyRender:(value, index)=>{
+          console.log(data[index.rowIndex].status,"value");
           return (
             <>
               {
-                value.approved_by_admin === true ? (<Chip label="Appored" color="success" />):(<Chip label="Rejected" color="error" />)
+                value && data[index.rowIndex].status === "Approved" && data[index.rowIndex].approved_by_admin === true ? (<Chip label="Approved" color="success" />):(<Chip label="Rejected" color="error" />)
               }
             </>
           )
@@ -194,7 +195,7 @@ const Events = () => {
   const handleApprove = async () => {
     try {
       const eventRef = doc(db, "events", selectedEvent.id);
-      await updateDoc(eventRef, {  approved_by_admin: true });
+      await updateDoc(eventRef, {  approved_by_admin: true ,status : "Approved"});
       setViewDialogOpen(false);
     } catch (error) {
       console.error("Error approving event: ", error);
@@ -205,7 +206,7 @@ const Events = () => {
   const handleReject = async () => {
     try {
       const eventRef = doc(db, "events", selectedEvent.id);
-      await updateDoc(eventRef, { approved_by_admin: false });
+      await updateDoc(eventRef, { approved_by_admin: false,status : "Pending" });
       setViewDialogOpen(false);
     } catch (error) {
       console.error("Error rejecting event: ", error);
@@ -408,10 +409,10 @@ const Events = () => {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleReject} color="secondary" variant="contained">
+          <Button onClick={handleReject} style={{backgroundColor:"red"}} variant="contained">
             Reject
           </Button>
-          <Button onClick={handleApprove} color="primary" variant="contained">
+          <Button onClick={handleApprove} style={{backgroundColor:"green"}}  variant="contained">
             Approve
           </Button>
           {/* <Button onClick={() => setViewDialogOpen(false)} color="primary">
