@@ -2,6 +2,7 @@ import React from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import AdminLayout from "layouts/Admin.js";
 import AuthLayout from "layouts/Auth.js";
+import { Toaster } from "react-hot-toast";
 
 const App = () => {
   // XOR decryption function (same as encryption)
@@ -24,11 +25,14 @@ const App = () => {
   }
 
   return (
+    <>
     <Routes>
       {!authToken && <Route path="/auth/*" element={<AuthLayout />} />}
       {authToken && <Route path="/admin/*" element={<AdminLayout />} />}
       <Route path="*" element={<Navigate to={authToken ? "/admin/index" : "/auth/login"} replace />} />
     </Routes>
+    <Toaster />
+    </>
   );
 };
 

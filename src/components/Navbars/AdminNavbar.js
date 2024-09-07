@@ -41,6 +41,7 @@ const AdminNavbar = (props) => {
       await auth.signOut();
       localStorage.removeItem("email");
       localStorage.removeItem("authToken");
+      localStorage.clear();
       window.location.href = "/auth/login";
     } catch (error) {
       console.log(error);

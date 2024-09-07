@@ -1,26 +1,30 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Card,
+  CardHeader,
+  CardBody,
   Container,
+  Row,
+  Col,
+  UncontrolledTooltip,
 } from "reactstrap";
 import Header from "components/Headers/Header.js";
 import MUIDataTable from "mui-datatables";
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "views/Login/config/config";
-import { Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
-import { Add, Delete, Edit } from "@mui/icons-material";
-import { Grid } from "@mui/material";
-import './styles.css';
+import { Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Switch, FormControlLabel, Chip } from "@mui/material";
+import { Add, Delete, Edit, Visibility } from "@mui/icons-material";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const CarrerAssesment = () => {
   const [data, setData] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editId, setEditId] = useState(null);
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    mobile: "",
-  });
-console.log(data,"data")
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  
+  // Firebase Storage
+  const storage = getStorage();
+
   // Columns for the MUI DataTable
   const columns = [
     {
@@ -36,8 +40,12 @@ console.log(data,"data")
       label: "Name",
     },
     {
-      name: "email",
-      label: "Email",
+      name: "education",
+      label: "Education",
+    },
+    {
+      name: "date",
+      label: "Date",
     },
     {
       name: "action",
@@ -48,13 +56,9 @@ console.log(data,"data")
         customBodyRender: (value, tableMeta) => {
           return (
             <>
-              <Edit
+              <Visibility
                 style={{ cursor: "pointer", marginRight: "10px" }}
-                onClick={() => handleEdit(tableMeta.rowIndex)}
-              />
-              <Delete
-                style={{ cursor: "pointer" }}
-                onClick={() => handleDelete(tableMeta.rowIndex)}
+                onClick={() => handleView(tableMeta.rowIndex)}
               />
             </>
           );
@@ -76,61 +80,14 @@ console.log(data,"data")
     return () => unsubscribe();
   }, []);
 
-  // Handle Add User
-  const handleAddUser = async () => {
-    try {
-      await addDoc(collection(db, "carrer_assesment_report"), formData);
-      setEditId(null); 
-      setFormData({ email: "" });
-      setDialogOpen(false);
-    } catch (error) {
-      console.error("Error adding document: ", error);
-    }
-  };
 
-  // Handle Update User
-  const handleUpdateUser = async () => {
-    try {
-      const userRef = doc(db, "carrer_assesment_report", editId);
-      await updateDoc(userRef, formData);
-      setFormData({  email: "" });
-      setDialogOpen(false);
-      setEditId(null);
-    } catch (error) {
-      console.error("Error updating document: ", error);
-    }
-  };
 
-  // Handle Delete User
-  const handleDelete = async (rowIndex) => {
-    try {
-      const userToDelete = data[rowIndex];
-      await deleteDoc(doc(db, "carrer_assesment_report", userToDelete.id));
-    } catch (error) {
-      console.error("Error deleting document: ", error);
-    }
-  };
-
-  // Handle Edit Button Click
-  const handleEdit = (rowIndex) => {
-    const userToEdit = data[rowIndex];
-    setFormData({
-      // username: userToEdit.username,
-      email: userToEdit.email,
-      // mobile: userToEdit.mobile,
-    });
-    setEditId(userToEdit.id);
-    setDialogOpen(true);
-  };
-
-  // Handle Form Submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (editId) {
-      handleUpdateUser();
-    } else {
-      handleAddUser();
-    }
+  // Handle View Button Click
+  const handleView = (rowIndex) => {
+    const eventToView = data[rowIndex];
+    console.log(eventToView,"view");
+    setSelectedEvent(eventToView);
+    setViewDialogOpen(true);
   };
 
   // Options for MUI DataTable
@@ -159,68 +116,121 @@ console.log(data,"data")
         <br />
         <br />
         <MUIDataTable
-          title={"Admin List"}
+          title={"Events List"}
           data={data}
           columns={columns}
           options={options}
         />
       </Container>
 
-      {/* Dialog for Add/Edit User */}
-      <Dialog
-  open={dialogOpen}
-  // onClose={() => setDialogOpen(false)}
-  onClose={() => {
-    setDialogOpen(false);
-    setEditId(null); 
-    setFormData({ email: "" }); // Clear form data when dialog is closed
-  }}
-  fullWidth
-  maxWidth="sm"
-  sx={{ padding: "20px" }}
->
-  <DialogTitle>
-    <Typography variant="h6" component="div">
-      {editId ? "Edit User" : "Add User"}
-    </Typography>
-  </DialogTitle>
-  <form onSubmit={handleSubmit}>
-    <DialogContent dividers>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <TextField
-            label="Email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            fullWidth
-            margin="dense"
-            required
-            variant="outlined"
-          />
-        </Grid>
-        {/* Add more form fields here if needed */}
-      </Grid>
-    </DialogContent>
-    <DialogActions sx={{ padding: "16px 24px" }}>
-      <Button
-        onClick={() => setDialogOpen(false)}
-        color="secondary"
-        variant="outlined"
-        sx={{ marginRight: "8px" }}
-      >
-        Cancel
-      </Button>
-      <Button
-        type="submit"
-        color="primary"
-        variant="contained"
-      >
-        {editId ? "Update" : "Add"}
-      </Button>
-    </DialogActions>
-  </form>
-</Dialog>
-
+      
+      {/* Dialog for Viewing Event Details */}
+      <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)}>
+        <DialogTitle>Event Details</DialogTitle>
+        <DialogContent>
+          {selectedEvent && (
+            <>
+              <p><strong>Name:</strong> {selectedEvent.name ? selectedEvent.name : "---"}</p>
+              <p><strong>Username:</strong> {selectedEvent?.username}</p>
+              <p><strong>Education:</strong> {selectedEvent.education ? selectedEvent.education : "---"}</p>
+              <p><strong>Date:</strong> {selectedEvent.date}</p>
+              <p><strong>Time:</strong> {selectedEvent.time}</p>
+              <b><strong>Career:</strong></b>
+              {selectedEvent.career && selectedEvent.career.map((i) => {
+                return (
+                  <React.Fragment key={i.title}>
+                    <p><strong>Title:</strong> {i.title}</p>
+                    <p><strong>If Additional Data Required:</strong> {i.if_additional_course_required}</p>
+                    <p><strong>Score:</strong> {i.score}</p>
+                <p><strong>Core Engineering Jobs: </strong> {!i.data.core_engineering_jobs && "---"}</p> 
+                      <ul>
+                          {i.data.core_engineering_jobs && i.data.core_engineering_jobs.map((job, index) => (
+                            <li key={index}>{job}</li>
+                          )) }
+                        </ul> 
+                    <p><strong>Essential Skills:</strong> {!i.data.essential_skills && "---"}</p>
+                        <ul>
+                          {i.data.essential_skills && i.data.essential_skills.map((skill, index) => (
+                            <li key={index}>{skill}</li>
+                          ))}
+                        </ul>
+                    <p><strong>Industry Insights Highlights:</strong>{!i.data.industry_insights_highlights && "---"}</p>
+                        <ul>
+                          {i.data.industry_insights_highlights && i.data.industry_insights_highlights.map((ind, index) => (
+                            <li key={index}>{ind}</li>
+                          ))}
+                        </ul>
+                    <p><strong>Job Responsibilities:</strong>{!i.data.job_responsibilities && "---"}</p>
+                        <ul>
+                          {i.data.job_responsibilities && i.data.job_responsibilities.map((res, index) => (
+                            <li key={index}>{res}</li>
+                          ))}
+                        </ul>
+                    <p><strong>Market Trends Highlights:</strong>{!i.data.market_trends_highlights && "---"}</p>
+                        <ul>
+                          {i.data.market_trends_highlights && i.data.market_trends_highlights.map((market, index) => (
+                            <li key={index}>{market}</li>
+                          ))}
+                        </ul>
+                   {i.data.salary_range && (
+                    <>
+                      <p><strong>Salary Range:</strong>{!i.data.salary_range && "---"}</p>
+                        <ul>
+                          {Object.entries(i.data.salary_range).map(([experience, salary], index) => (
+                            <li key={index}>
+                              <strong>{experience.replace('_', '-')}:</strong> {salary}
+                            </li>
+                          ))}
+                        </ul>
+                        </>)}
+                        <p><strong>Study Programs:</strong>{!i.data.study_programs && "---"}</p>
+                          {i.data.study_programs && Object.entries(i.data.study_programs).map(([programType, programDetails], index) => (
+                            <div key={index}>
+                              <b>{programDetails.title}</b>
+                              <p><strong>Duration:</strong> {programDetails.duration}</p>
+                              <p><strong>Specializations:</strong></p>
+                              <ul>
+                                {programDetails.specializations.map((specialization, index) => (
+                                  <li key={index}>{specialization}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        <p><strong>Market Trends Highlights:</strong>{!i.data.trending_jobs && "---"}</p>
+                          <ul>
+                            {i.data.trending_jobs && i.data.trending_jobs.map((trend, index) => (
+                              <li key={index}>{trend}</li>
+                            ))}
+                          </ul>
+                        <hr></hr>
+                  </React.Fragment>
+                );
+              })}
+              <b><strong>Personality:</strong></b>
+              <p><strong>NiceName:</strong> {selectedEvent.personality.niceName}</p>
+              <p><strong>Personality:</strong> {selectedEvent.personality.personality}</p>
+              <p><strong>Role:</strong> {selectedEvent.personality.role}</p>
+              <p><strong>Strategy:</strong> {selectedEvent.personality.strategy}</p>
+              <p><strong>Variant:</strong> {selectedEvent.personality.variant}</p>
+              <p><strong>Personality Traits:</strong></p>
+              <div>
+                {selectedEvent.personality.traits && selectedEvent.personality.traits.map((trait, index) => (
+                  <div key={index} style={{ border: `2px solid ${trait.color}`, padding: '10px', marginBottom: '15px' }}>
+                    <h3>{trait.trait}</h3>
+                    <img src={trait.imageSrc} alt={trait.imageAlt} style={{ maxWidth: '100px' }} />
+                    <p><strong>Description:</strong> {trait.description}</p>
+                    <p><strong>Snippet:</strong> {trait.snippet}</p>
+                    <p><strong>Energy Level:</strong> {trait.pct}%</p>
+                    <p><strong>Key:</strong> {trait.key}</p>
+                    <p><strong>Labels:</strong> {trait.titles.join(', ')}</p>
+                    <a href={trait.link} target="_blank" rel="noopener noreferrer">Learn more about {trait.label}</a>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

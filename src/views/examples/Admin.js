@@ -17,7 +17,7 @@ const Admin = () => {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
-    mobile: "",
+    profile_url: "",
   });
 
   // Columns for the MUI DataTable
@@ -37,6 +37,10 @@ const Admin = () => {
     {
       name: "email",
       label: "Email",
+    },
+    {
+      name: "profile_url",
+      label: "Profile URL",
     },
     {
       name: "action",
@@ -64,7 +68,7 @@ const Admin = () => {
 
   // Fetch data from Firestore
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "users"), (querySnapshot) => {
+    const unsubscribe = onSnapshot(collection(db, "admin_details"), (querySnapshot) => {
       const documents = querySnapshot.docs.map((doc, index) => ({
         id: doc.id,
         SlNo: index + 1,
@@ -78,7 +82,7 @@ const Admin = () => {
   // Handle Add User
   const handleAddUser = async () => {
     try {
-      await addDoc(collection(db, "users"), formData);
+      await addDoc(collection(db, "admin_details"), formData);
       setEditId(null); 
       setFormData({ email: "" });
       setDialogOpen(false);
@@ -90,7 +94,7 @@ const Admin = () => {
   // Handle Update User
   const handleUpdateUser = async () => {
     try {
-      const userRef = doc(db, "users", editId);
+      const userRef = doc(db, "admin_details", editId);
       await updateDoc(userRef, formData);
       setFormData({  email: "" });
       setDialogOpen(false);
@@ -104,7 +108,7 @@ const Admin = () => {
   const handleDelete = async (rowIndex) => {
     try {
       const userToDelete = data[rowIndex];
-      await deleteDoc(doc(db, "users", userToDelete.id));
+      await deleteDoc(doc(db, "admin_details", userToDelete.id));
     } catch (error) {
       console.error("Error deleting document: ", error);
     }

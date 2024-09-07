@@ -20,7 +20,7 @@ import { useState } from "react";
 import { NavLink as NavLinkRRD, Link } from "react-router-dom";
 // nodejs library to set properties for components
 import { PropTypes } from "prop-types";
-
+import './styles.css';
 // reactstrap components
 import {
   Button,
@@ -51,6 +51,7 @@ import {
   Row,
   Col,
 } from "reactstrap";
+import { auth } from "views/Login/config/config";
 
 var ps;
 
@@ -103,6 +104,18 @@ const Sidebar = (props) => {
     };
   }
 
+  const handleLogOut = async() =>{
+    try {
+      await auth.signOut();
+      localStorage.removeItem("email");
+      localStorage.removeItem("authToken");
+      localStorage.clear();
+      window.location.href = "/auth/login";
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <Navbar
       className="navbar-vertical fixed-left navbar-light bg-white"
@@ -116,7 +129,7 @@ const Sidebar = (props) => {
           type="button"
           onClick={toggleCollapse}
         >
-          <span className="navbar-toggler-icon" />
+        <span class="line-md--close-to-menu-alt-transition"></span>
         </button>
         {/* Brand */}
         {logo ? (
@@ -130,7 +143,7 @@ const Sidebar = (props) => {
         ) : null}
         {/* User */}
         <Nav className="align-items-center d-md-none">
-          <UncontrolledDropdown nav>
+          {/* <UncontrolledDropdown nav>
             <DropdownToggle nav className="nav-link-icon">
               <i className="ni ni-bell-55" />
             </DropdownToggle>
@@ -144,23 +157,23 @@ const Sidebar = (props) => {
               <DropdownItem divider />
               <DropdownItem>Something else here</DropdownItem>
             </DropdownMenu>
-          </UncontrolledDropdown>
+          </UncontrolledDropdown> */}
           <UncontrolledDropdown nav>
             <DropdownToggle nav>
               <Media className="align-items-center">
                 <span className="avatar avatar-sm rounded-circle">
                   <img
                     alt="..."
-                    src={require("../../assets/img/theme/team-1-800x800.jpg")}
+                    src={localStorage.getItem("photoUrl")}
                   />
                 </span>
               </Media>
             </DropdownToggle>
             <DropdownMenu className="dropdown-menu-arrow" right>
               <DropdownItem className="noti-title" header tag="div">
-                <h6 className="text-overflow m-0">Welcome!</h6>
+                <p className="text-overflow m-0" style={{fontSize:"12px"}}>Welcome! {localStorage.getItem("displayName")}</p>
               </DropdownItem>
-              <DropdownItem to="/admin/user-profile" tag={Link}>
+              {/* <DropdownItem to="/admin/user-profile" tag={Link}>
                 <i className="ni ni-single-02" />
                 <span>My profile</span>
               </DropdownItem>
@@ -175,12 +188,12 @@ const Sidebar = (props) => {
               <DropdownItem to="/admin/user-profile" tag={Link}>
                 <i className="ni ni-support-16" />
                 <span>Support</span>
-              </DropdownItem>
+              </DropdownItem> */}
               <DropdownItem divider />
-              <DropdownItem href="#pablo" onClick={(e) => e.preventDefault()}>
-                <i className="ni ni-user-run" />
-                <span>Logout</span>
-              </DropdownItem>
+              <DropdownItem href="#pablo" onClick={()=>handleLogOut()}>
+                  <i className="ni ni-user-run" />
+                  <span>Logout</span>
+                </DropdownItem>
             </DropdownMenu>
           </UncontrolledDropdown>
         </Nav>
@@ -215,7 +228,7 @@ const Sidebar = (props) => {
             </Row>
           </div>
           {/* Form */}
-          <Form className="mt-4 mb-3 d-md-none">
+          {/* <Form className="mt-4 mb-3 d-md-none">
             <InputGroup className="input-group-rounded input-group-merge">
               <Input
                 aria-label="Search"
@@ -229,7 +242,7 @@ const Sidebar = (props) => {
                 </InputGroupText>
               </InputGroupAddon>
             </InputGroup>
-          </Form>
+          </Form> */}
           {/* Navigation */}
           <Nav navbar>{createLinks(routes)}</Nav>
           {/* Divider */}

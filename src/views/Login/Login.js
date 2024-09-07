@@ -32,11 +32,16 @@ import {
   Col,
 } from "reactstrap";
 import "./login.css";
-import { auth, provider } from "./config/config";
+import { auth, db, provider } from "./config/config";
 import { signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { collection, onSnapshot } from "firebase/firestore";
+import toast from "react-hot-toast";
+
 const Login = () => {
   const navigate = useNavigate();
+  const [allowedEmails, setData] = useState()
   // XOR encryption function
   const xorEncrypt = (token, key) => {
     let result = "";
@@ -55,18 +60,34 @@ const Login = () => {
     localStorage.setItem("authToken", encryptedToken);
   };
 
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "admins"), (querySnapshot) => {
+      const documents = querySnapshot.docs.map((doc, index) => ({
+        id: doc.id,
+        SlNo: index + 1,
+        ...doc.data(),
+      }));
+      setData(documents);
+    });
+    return () => unsubscribe();
+  }, []);
+
   const handleClick = () => {
     console.log("Login button clicked");
     
     signInWithPopup(auth, provider)
       .then((data) => {
-        console.log(data,"data")
-        localStorage.setItem("email", data.user.email);
-        localStorage.setItem("displayName", data.user.displayName);
-        localStorage.setItem("photoUrl", data.user.photoURL);
-        saveTokenToLocalStorage(data.user.accessToken);
-        navigate("/admin/index");
-        window.location.reload()
+        if (allowedEmails && allowedEmails[0].emails.includes(data.user.email)) {
+          localStorage.setItem("email", data.user.email);
+          localStorage.setItem("displayName", data.user.displayName);
+          localStorage.setItem("photoUrl", data.user.photoURL);
+          saveTokenToLocalStorage(data.user.accessToken);
+          navigate("/admin/index");
+          window.location.reload();
+        }
+        else{
+          toast.error("You are not an Admin")
+        }
       })
       .catch((error) => {
         console.error("Login failed:", error);
