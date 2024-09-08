@@ -10,11 +10,12 @@ import {
 } from "reactstrap";
 import Header from "components/Headers/Header.js";
 import MUIDataTable from "mui-datatables";
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "views/Login/config/config";
 import { Box, Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Switch, FormControlLabel, Chip } from "@mui/material";
 import { Add, Delete, Edit, Visibility } from "@mui/icons-material";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import s3 from "views/Login/config/awsConfig";
 
 const Events = () => {
   const [data, setData] = useState([]);
@@ -36,7 +37,7 @@ const Events = () => {
     is_active: false,
   });
   const [bannerImage, setBannerImage] = useState(null);
-
+  const [selectedFiles, setSelectedFiles] = useState([]);
   // Firebase Storage
   const storage = getStorage();
 
@@ -119,35 +120,107 @@ const Events = () => {
     return () => unsubscribe();
   }, []);
 
+  const uploadFilesAndGetUrls = async (files) => {
+    const promises = [];
+    const urls = [];
+  
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const key = `banner_images/${file.name}`;
+  
+      const params = {
+        Bucket: 'launchpad-events',
+        Key: key,
+        Body: file,
+        ContentType: file.type,
+      };
+  
+      const uploadPromise = s3.upload(params).promise();
+      promises.push(uploadPromise);
+    }
+  
+    try {
+      await Promise.all(promises);
+  
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const url = `https://launchpad-events.s3.ap-south-1.amazonaws.com/banner_images/${file.name}`
+        urls.push(url);
+      }
+  
+      return urls;
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      throw error;
+    }
+  };
+ 
   // Handle Add Event
   const handleAddEvent = async () => {
     try {
-      let bannerImageUrl = "";
-      if (bannerImage) {
-        const imageRef = ref(storage, `banner_images/${bannerImage.name}`);
-        await uploadBytes(imageRef, bannerImage);
-        bannerImageUrl = await getDownloadURL(imageRef);
+      let newBannerImageUrls = [];
+  
+      if (selectedFiles.length > 0) {
+        newBannerImageUrls = await uploadFilesAndGetUrls(selectedFiles);
       }
-
-      await addDoc(collection(db, "events"), { ...formData, banner_images: [bannerImageUrl] });
+  
+      if (editId) {
+        // Update existing event
+        const eventRef = doc(db, "events", editId);
+        const eventDoc = await getDoc(eventRef);
+  
+        if (!eventDoc.exists()) {
+          throw new Error("Event not found");
+        }
+  
+        const existingData = eventDoc.data();
+        const oldBannerImages = existingData.banner_images || [];
+        const combinedBannerImages = [...oldBannerImages, ...newBannerImageUrls];
+  
+        await updateDoc(eventRef, {
+          ...formData,
+          banner_images: combinedBannerImages,
+        });
+      } else {
+        // Add new event
+        await addDoc(collection(db, "events"), {
+          ...formData,
+          banner_images: newBannerImageUrls,
+        });
+      }
+  
       resetForm();
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error("Error adding or updating event: ", error);
     }
   };
+  
 
   // Handle Update Event
   const handleUpdateEvent = async () => {
     try {
-      let bannerImageUrl = formData.banner_images[0];
-      if (bannerImage) {
-        const imageRef = ref(storage, `banner_images/${bannerImage.name}`);
-        await uploadBytes(imageRef, bannerImage);
-        bannerImageUrl = await getDownloadURL(imageRef);
+      let newBannerImageUrls = [];
+  
+      if (selectedFiles.length > 0) {
+        newBannerImageUrls = await uploadFilesAndGetUrls(selectedFiles);
       }
-
-      const eventRef = doc(db, "events", editId);
-      await updateDoc(eventRef, { ...formData, banner_images: [bannerImageUrl] });
+  
+        // Update existing event
+        const eventRef = doc(db, "events", editId);
+        const eventDoc = await getDoc(eventRef);
+  
+        if (!eventDoc.exists()) {
+          throw new Error("Event not found");
+        }
+  
+        const existingData = eventDoc.data();
+        const oldBannerImages = existingData.banner_images || [];
+        const combinedBannerImages = [...oldBannerImages, ...newBannerImageUrls];
+  
+        await updateDoc(eventRef, {
+          ...formData,
+          banner_images: combinedBannerImages,
+        });
       resetForm();
     } catch (error) {
       console.error("Error updating document: ", error);
@@ -167,11 +240,30 @@ const Events = () => {
   // Handle Edit Button Click
   const handleEdit = (rowIndex) => {
     const eventToEdit = data[rowIndex];
+    console.log("Original Date:", eventToEdit.date); // "03-09-24"
+    console.log("Original Time:", eventToEdit.time); // "1:15 PM"
+  
+    // Convert "03-09-24" to "2024-03-09"
+    const [month, day, year] = eventToEdit.date.split('-');
+    const formattedDate = `20${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  
+    // Convert "1:15 PM" to "13:15"
+    const [time, modifier] = eventToEdit.time.split(' ');
+    let [hours, minutes] = time.split(':');
+  
+    if (modifier === 'PM' && hours !== '12') {
+      hours = String(parseInt(hours, 10) + 12);
+    } else if (modifier === 'AM' && hours === '12') {
+      hours = '00';
+    }
+  
+    const formattedTime = `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+  
     setFormData({
       title: eventToEdit.title,
       event_type: eventToEdit.event_type,
-      date: eventToEdit.date,
-      time: eventToEdit.time,
+      date: formattedDate,
+      time: formattedTime,
       location: eventToEdit.location,
       description: eventToEdit.description,
       approved_by_admin: eventToEdit.approved_by_admin,
@@ -183,10 +275,12 @@ const Events = () => {
     setEditId(eventToEdit.id);
     setDialogOpen(true);
   };
+  
 
   // Handle View Button Click
   const handleView = (rowIndex) => {
     const eventToView = data[rowIndex];
+    console.log(eventToView,"eventToView")
     setSelectedEvent(eventToView);
     setViewDialogOpen(true);
   };
@@ -215,17 +309,19 @@ const Events = () => {
 
   // Handle Form Submission
   const handleSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevents the page from refreshing
+  
     if (editId) {
       handleUpdateEvent();
     } else {
       handleAddEvent();
     }
   };
-
+  
   // Handle File Change
   const handleFileChange = (e) => {
     setBannerImage(e.target.files[0]);
+    setSelectedFiles(e.target.files);
   };
 
   // Reset form data when dialog is closed
@@ -257,6 +353,30 @@ const Events = () => {
     rowsPerPageOptions: [10, 20, 30],
   };
 
+  const uploadFiles = async () => {
+    const promises = [];
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      const params = {
+        Bucket: 'launchpad-events',
+        Key: file.name,
+        Body: file,
+        ContentType: file.type,
+      };
+
+      const uploadPromise = s3.upload(params).promise();
+      promises.push(uploadPromise);
+    }
+
+    try {
+      const results = await Promise.all(promises);
+      console.log('All files uploaded successfully:', results);
+    } catch (error) {
+      console.error('Error uploading files:', error);
+    }
+  };
+
+
   return (
     <>
       <Header />
@@ -285,98 +405,99 @@ const Events = () => {
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
       <DialogTitle>{editId ? "Edit Event" : "Add Event"}</DialogTitle>
       <form onSubmit={handleSubmit}>
-        <DialogContent>
-          <TextField
-            label="Title"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            fullWidth
-            margin="dense"
-            required
-          />
-          <TextField
-            label="Event Type"
-            value={formData.event_type}
-            onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
-            fullWidth
-            margin="dense"
-            required
-          />
-          <TextField
-            label="Date"
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-            required
-          />
-          <TextField
-            label="Time"
-            type="time"
-            value={formData.time}
-            onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-            fullWidth
-            margin="dense"
-            InputLabelProps={{ shrink: true }}
-            required
-          />
-          <TextField
-            label={formData.is_virtual_event ? "Virtual Link" : "Location"}
-            value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            fullWidth
-            margin="dense"
-            required
-          />
-          <TextField
-            label="Description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            fullWidth
-            margin="dense"
-            required
-          />
-          {formData.banner_images[0] && (
+          <DialogContent>
+            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
             <TextField
-              label="Banner Image URL"
-              value={formData.banner_images[0]}
-              onChange={(e) =>
-                setFormData({ ...formData, banner_images: [e.target.value] })
-              }
+              label="Title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               fullWidth
               margin="dense"
+              required
             />
-          )}
-          <input
-            accept="image/*"
-            type="file"
-            onChange={handleFileChange}
-            style={{ marginTop: '10px', display: 'block' }} // Added margin for spacing
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formData.is_virtual_event}
+            <TextField
+              label="Event Type"
+              value={formData.event_type}
+              onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
+              fullWidth
+              margin="dense"
+              required
+            />
+            <TextField
+              label="Date"
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              fullWidth
+              margin="dense"
+              required
+            />
+            <TextField
+              label="Time"
+              type="time"
+              value={formData.time}
+              onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+              fullWidth
+              margin="dense"
+              required
+            />
+            <TextField
+              label={formData.is_virtual_event ? "Virtual Link" : "Location"}
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              fullWidth
+              margin="dense"
+              required
+            />
+            <TextField
+              label="Description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              fullWidth
+              margin="dense"
+              required
+            />
+            {formData.banner_images[0] && (
+              <TextField
+                label="Banner Image URL"
+                value={formData.banner_images[0]}
                 onChange={(e) =>
-                  setFormData({ ...formData, is_virtual_event: e.target.checked })
+                  setFormData({ ...formData, banner_images: [e.target.value] })
                 }
+                fullWidth
+                margin="dense"
               />
-            }
-            label="Virtual Event"
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formData.is_active}
-                onChange={(e) =>
-                  setFormData({ ...formData, is_active: e.target.checked })
-                }
-              />
-            }
-            label="Active Event"
-          />
+            )}
+            <input
+              accept="image/*"
+              type="file"
+              multiple
+              onChange={handleFileChange}
+              style={{ marginTop: '10px', display: 'block' }} // Added margin for spacing
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.is_virtual_event}
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_virtual_event: e.target.checked })
+                  }
+                />
+              }
+              label="Virtual Event"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={formData.is_active}
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_active: e.target.checked })
+                  }
+                />
+              }
+              label="Active Event"
+            />
+          </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)} color="primary">
@@ -387,6 +508,7 @@ const Events = () => {
           </Button>
         </DialogActions>
       </form>
+
     </Dialog>
 
       {/* Dialog for Viewing Event Details */}

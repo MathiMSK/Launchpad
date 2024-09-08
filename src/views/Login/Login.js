@@ -71,28 +71,33 @@ const Login = () => {
     });
     return () => unsubscribe();
   }, []);
+  
+const handleClick = () => {
+  console.log("Login button clicked");
 
-  const handleClick = () => {
-    console.log("Login button clicked");
-    
-    signInWithPopup(auth, provider)
-      .then((data) => {
-        if (allowedEmails && allowedEmails[0].emails.includes(data.user.email)) {
-          localStorage.setItem("email", data.user.email);
-          localStorage.setItem("displayName", data.user.displayName);
-          localStorage.setItem("photoUrl", data.user.photoURL);
-          saveTokenToLocalStorage(data.user.accessToken);
-          navigate("/admin/index");
-          window.location.reload();
-        }
-        else{
-          toast.error("You are not an Admin")
-        }
-      })
-      .catch((error) => {
-        console.error("Login failed:", error);
-      });
-  };
+  signInWithPopup(auth, provider)
+    .then((data) => {
+      const userEmail = data.user.email;
+
+      // Check if the email exists in the allowedEmails array of objects
+      const isAdmin = allowedEmails && allowedEmails.some(item => item.email === userEmail);
+
+      if (isAdmin) {
+        localStorage.setItem("email", userEmail);
+        localStorage.setItem("displayName", data.user.displayName);
+        localStorage.setItem("photoUrl", data.user.photoURL);
+        saveTokenToLocalStorage(data.user.accessToken);
+        navigate("/admin/index");
+        window.location.reload();
+      } else {
+        toast.error("You are not an Admin");
+      }
+    })
+    .catch((error) => {
+      console.error("Login failed:", error);
+    });
+};
+
 
   return (
     <>

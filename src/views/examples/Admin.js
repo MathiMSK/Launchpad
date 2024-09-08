@@ -15,11 +15,11 @@ const Admin = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({
-    username: "",
+    // username: "",
     email: "",
-    profile_url: "",
+    // profile_url: "",
   });
-
+console.log(data,"data")
   // Columns for the MUI DataTable
   const columns = [
     {
@@ -30,18 +30,18 @@ const Admin = () => {
         sort: false,
       },
     },
-    {
-      name: "username",
-      label: "Name",
-    },
+    // {
+    //   name: "username",
+    //   label: "Name",
+    // },
     {
       name: "email",
       label: "Email",
     },
-    {
-      name: "profile_url",
-      label: "Profile URL",
-    },
+    // {
+    //   name: "profile_url",
+    //   label: "Profile URL",
+    // },
     {
       name: "action",
       label: "Actions",
@@ -68,7 +68,7 @@ const Admin = () => {
 
   // Fetch data from Firestore
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "admin_details"), (querySnapshot) => {
+    const unsubscribe = onSnapshot(collection(db, "admins"), (querySnapshot) => {
       const documents = querySnapshot.docs.map((doc, index) => ({
         id: doc.id,
         SlNo: index + 1,
@@ -82,7 +82,7 @@ const Admin = () => {
   // Handle Add User
   const handleAddUser = async () => {
     try {
-      await addDoc(collection(db, "admin_details"), formData);
+      await addDoc(collection(db, "admins"), formData);
       setEditId(null); 
       setFormData({ email: "" });
       setDialogOpen(false);
@@ -94,7 +94,7 @@ const Admin = () => {
   // Handle Update User
   const handleUpdateUser = async () => {
     try {
-      const userRef = doc(db, "admin_details", editId);
+      const userRef = doc(db, "admins", editId);
       await updateDoc(userRef, formData);
       setFormData({  email: "" });
       setDialogOpen(false);
@@ -108,7 +108,7 @@ const Admin = () => {
   const handleDelete = async (rowIndex) => {
     try {
       const userToDelete = data[rowIndex];
-      await deleteDoc(doc(db, "admin_details", userToDelete.id));
+      await deleteDoc(doc(db, "admins", userToDelete.id));
     } catch (error) {
       console.error("Error deleting document: ", error);
     }
